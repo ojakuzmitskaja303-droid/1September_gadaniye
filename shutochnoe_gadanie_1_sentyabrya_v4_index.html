@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Шуточное гадание на учебный год</title>
+<style>
+  :root{
+    --blue:#1169c7;
+    --orange:#f58a00;
+    --dark:#20304a;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:"Trebuchet MS", Arial, sans-serif;
+    color:var(--dark);
+    min-height:100vh;
+    overflow-x:hidden;
+    background:
+      radial-gradient(circle at 15% 15%, rgba(255,255,255,.95) 0 3px, transparent 4px),
+      linear-gradient(135deg,#e7f7ff 0%,#fff9df 48%,#eefaff 100%);
+  }
+  button{font:inherit}
+
+  .page{
+    min-height:100vh;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+    position:relative;
+  }
+  .page.active{display:flex}
+
+  .doodle{
+    position:absolute;
+    font-size:clamp(24px,4vw,54px);
+    opacity:.18;
+    user-select:none;
+    pointer-events:none;
+  }
+  .d1{left:3%;top:5%;transform:rotate(-10deg)}
+  .d2{right:4%;top:7%;transform:rotate(12deg)}
+  .d3{left:5%;bottom:7%;transform:rotate(8deg)}
+  .d4{right:5%;bottom:6%;transform:rotate(-8deg)}
+
+  .panel{
+    width:min(1120px,96vw);
+    background:rgba(255,255,255,.94);
+    border:3px solid rgba(17,105,199,.16);
+    border-radius:34px;
+    box-shadow:0 18px 55px rgba(32,48,74,.16);
+    padding:clamp(24px,4vw,54px);
+    text-align:center;
+    position:relative;
+    overflow:hidden;
+  }
+
+  .start-title{
+    font-weight:1000;
+    line-height:.95;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+    color:var(--blue);
+    font-size:clamp(42px,8vw,94px);
+    margin:8px 0 8px;
+    text-shadow:0 4px 0 #fff, 0 8px 0 rgba(245,138,0,.25);
+  }
+  .start-title .accent{display:block;color:var(--orange);font-size:.64em;margin-top:14px}
+  .subtitle{
+    font-size:clamp(18px,2.4vw,29px);
+    font-weight:700;
+    margin:22px auto 30px;
+    max-width:800px;
+  }
+  .school-row{
+    font-size:clamp(42px,6vw,78px);
+    letter-spacing:12px;
+    margin:6px 0 26px;
+  }
+  .primary{
+    border:0;
+    padding:16px 34px;
+    border-radius:20px;
+    background:linear-gradient(180deg,#1977dc,#0a5db5);
+    color:#fff;
+    font-weight:900;
+    font-size:clamp(18px,2vw,26px);
+    box-shadow:0 7px 0 #084a8d,0 10px 24px rgba(9,80,160,.22);
+    cursor:pointer;
+    transition:.18s transform,.18s box-shadow;
+  }
+  .primary:hover{transform:translateY(-2px)}
+  .primary:active{transform:translateY(4px);box-shadow:0 3px 0 #084a8d}
+  .secondary{
+    border:2px solid #d3e4f7;
+    padding:11px 20px;
+    border-radius:16px;
+    background:#fff;
+    color:var(--blue);
+    font-weight:900;
+    cursor:pointer;
+  }
+
+  #gamePage{
+    align-items:flex-start;
+    background:linear-gradient(180deg,#f8fdff 0%,#fffdf6 100%);
+  }
+  .game-wrap{
+    width:min(1180px,98vw);
+    padding:18px 8px 34px;
+    text-align:center;
+  }
+  .game-title{
+    margin:0;
+    font-size:clamp(32px,4.4vw,60px);
+    color:var(--blue);
+    font-weight:1000;
+    text-transform:uppercase;
+  }
+  .game-title span{color:var(--orange)}
+  .instruction{
+    margin:8px auto 22px;
+    font-size:clamp(16px,2vw,24px);
+    font-weight:700;
+    max-width:850px;
+  }
+
+  .cards{
+    width:100%;
+    display:grid;
+    grid-template-columns:repeat(6,1fr);
+    gap:12px;
+  }
+  .card{
+    min-height:150px;
+    position:relative;
+    cursor:pointer;
+    border-radius:20px;
+    transition:transform .18s ease;
+  }
+  .card:hover{transform:translateY(-3px)}
+  .card-inner{
+    width:100%;
+    height:100%;
+    min-height:150px;
+    position:relative;
+    transform-style:preserve-3d;
+    transition:transform .55s cubic-bezier(.2,.75,.25,1);
+  }
+  .card.flipped .card-inner{transform:rotateY(180deg)}
+  .face{
+    position:absolute;
+    inset:0;
+    border-radius:20px;
+    backface-visibility:hidden;
+    -webkit-backface-visibility:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:12px;
+    border:2px solid rgba(20,70,120,.12);
+    box-shadow:0 7px 16px rgba(32,48,74,.10);
+  }
+  .front{
+    flex-direction:column;
+    background:var(--bg);
+  }
+  .num{
+    font-size:clamp(38px,5vw,62px);
+    line-height:1;
+    font-weight:1000;
+    color:var(--fg);
+    text-shadow:0 2px 0 #fff;
+  }
+  .tiny{
+    margin-top:6px;
+    font-size:12px;
+    opacity:.65;
+    font-weight:800;
+  }
+  .back{
+    transform:rotateY(180deg);
+    background:#fff;
+    color:#243653;
+    flex-direction:column;
+    gap:10px;
+    font-size:clamp(14px,1.5vw,19px);
+    font-weight:900;
+    line-height:1.2;
+    border-color:var(--fg);
+    text-align:center;
+    justify-content:center;
+    align-items:center;
+  }
+  .back .stars{color:var(--fg);letter-spacing:5px}
+  .hint{
+    margin:18px 0 8px;
+    font-size:14px;
+    color:#69768a;
+  }
+  .game-actions{
+    display:flex;
+    gap:12px;
+    justify-content:center;
+    margin-top:14px;
+    flex-wrap:wrap;
+  }
+
+  /* увеличенная карточка */
+  .overlay{
+    position:fixed;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    background:rgba(26,39,65,.45);
+    backdrop-filter: blur(4px);
+    z-index:50;
+    padding:20px;
+  }
+  .overlay.active{display:flex}
+  .overlay-card{
+    width:min(560px,92vw);
+    min-height:340px;
+    position:relative;
+    perspective:1100px;
+    cursor:pointer;
+    animation:popIn .28s ease;
+  }
+  @keyframes popIn{
+    from{transform:scale(.82); opacity:.4}
+    to{transform:scale(1); opacity:1}
+  }
+  .overlay-card .card-inner{min-height:340px}
+  .overlay-card .front .num{font-size:88px}
+  .overlay-card .back{
+    font-size:clamp(24px,3.1vw,34px);
+    padding:26px;
+  }
+  .overlay-note{
+    position:absolute;
+    left:50%;
+    bottom:18px;
+    transform:translateX(-50%);
+    color:#fff;
+    font-size:14px;
+    font-weight:800;
+    text-align:center;
+    background:rgba(0,0,0,.18);
+    padding:8px 14px;
+    border-radius:999px;
+  }
+
+  .final-title{
+    color:var(--blue);
+    font-size:clamp(42px,7vw,88px);
+    line-height:1;
+    font-weight:1000;
+    text-transform:uppercase;
+    margin:6px 0 12px;
+  }
+  .final-title span{color:var(--orange);display:block;margin-top:10px}
+  .final-text{
+    font-size:clamp(20px,2.4vw,30px);
+    max-width:850px;
+    margin:20px auto;
+    font-weight:800;
+    line-height:1.35;
+  }
+  .big-emoji{font-size:clamp(64px,9vw,120px);margin:8px 0}
+  .confetti span{
+    position:absolute;
+    top:-10vh;
+    width:10px;height:18px;border-radius:3px;
+    animation:fall linear infinite;
+    opacity:.8;
+  }
+  @keyframes fall{
+    to{transform:translateY(120vh) rotate(720deg)}
+  }
+
+  @media(max-width:900px){
+    .cards{grid-template-columns:repeat(4,1fr)}
+  }
+  @media(max-width:620px){
+    .page{padding:12px}
+    .cards{grid-template-columns:repeat(3,1fr);gap:8px}
+    .card,.card-inner{min-height:126px}
+    .face{border-radius:15px;padding:8px}
+    .back{font-size:12px}
+    .tiny{font-size:10px}
+    .panel{border-radius:24px}
+    .overlay-card{min-height:300px}
+    .overlay-card .card-inner{min-height:300px}
+    .overlay-card .front .num{font-size:72px}
+  }
+</style>
+</head>
+<body>
+
+<section id="startPage" class="page active">
+  <div class="doodle d1">🔔</div><div class="doodle d2">✏️</div>
+  <div class="doodle d3">🎒</div><div class="doodle d4">🌍</div>
+
+  <div class="panel">
+    <div class="school-row">🔔 ✈️ 📓 ✏️ ⭐</div>
+    <h1 class="start-title">Шуточное гадание<span class="accent">на учебный год</span></h1>
+    <div class="subtitle">
+      Загадай число от 1 до 24 и узнай,
+      что ждёт тебя в новом учебном году!
+    </div>
+    <button class="primary" id="startBtn">✨ Начать гадание</button>
+  </div>
+</section>
+
+<section id="gamePage" class="page">
+  <div class="game-wrap">
+    <h2 class="game-title">Выбери <span>своё число</span></h2>
+    <div class="instruction">
+      Нажми на плашку — она перевернётся и увеличится.
+      Нажми на открытую карточку ещё раз — вернёшься к странице с карточками.
+    </div>
+
+    <div class="cards" id="cards"></div>
+
+    <div class="hint">💡 Для следующего участника можно выбрать другую карточку или вернуться на старт по кнопке ниже.</div>
+    <div class="game-actions">
+      <button class="secondary" id="homeBtn">↩ На старт</button>
+      <button class="primary" id="finishBtn">🎉 Завершить гадание</button>
+    </div>
+  </div>
+</section>
+
+<section id="finalPage" class="page">
+  <div class="confetti" id="confetti"></div>
+  <div class="panel">
+    <div class="big-emoji">🎒📚🌟</div>
+    <h2 class="final-title">С началом<span>нового учебного года!</span></h2>
+    <p class="final-text">
+      Пусть этот год принесёт интересные открытия, добрые встречи,
+      уверенность в своих силах и много поводов гордиться собой!
+    </p>
+    <p class="final-text">Удачи, вдохновения и отличного настроения! 🍀</p>
+    <button class="primary" id="againBtn">🔄 Сыграть ещё раз</button>
+  </div>
+</section>
+
+<div class="overlay" id="overlay">
+  <div class="overlay-card card flipped" id="overlayCard" aria-label="Открытая карточка">
+    <div class="card-inner">
+      <div class="face front" id="overlayFront"></div>
+      <div class="face back" id="overlayBack"></div>
+    </div>
+  </div>
+  <div class="overlay-note">Нажмите на открытую карточку ещё раз, чтобы вернуться к странице с карточками</div>
+</div>
+
+<script>
+const wishes = [
+  "В этом году тебя ждёт неожиданная пятёрка!",
+  "Ты откроешь в себе новый талант.",
+  "Один школьный предмет неожиданно станет любимым.",
+  "Ты найдёшь нового хорошего друга.",
+  "Учитель обязательно похвалит тебя за старание.",
+  "На одном из уроков ты узнаешь удивительный факт.",
+  "Впереди тебя ждёт весёлое школьное приключение.",
+  "Ты справишься с заданием, которое сначала покажется сложным.",
+  "Твои ответы не раз удивят весь класс.",
+  "Тебе поручат важное и интересное дело.",
+  "Один учебный день окажется особенно удачным.",
+  "Тебя ждёт приятный сюрприз на перемене.",
+  "Ты прочитаешь очень интересную книгу.",
+  "Твоя отличная идея пригодится всему классу.",
+  "На контрольной попадётся знакомое задание.",
+  "Ты станешь ещё увереннее в своих силах.",
+  "Школьная жизнь подарит тебе яркое событие.",
+  "Скоро ты получишь хорошую новость.",
+  "Кто-то обязательно поблагодарит тебя за помощь.",
+  "В этом году ты научишься чему-то необычному.",
+  "Тебя ждёт маленькая победа в школьном соревновании.",
+  "Ты рассмешишь друзей удачной шуткой.",
+  "Твои знания помогут найти правильный ответ в нужный момент.",
+  "Учебный год подарит тебе много поводов для гордости!"
+];
+
+const palette = [
+  ["#e8f2ff","#2674d8"],["#eaf8e8","#43a047"],["#fff2dc","#fb8c00"],
+  ["#f5e9fb","#8e24aa"],["#ffe9e7","#e53935"],["#e5f7f5","#008f83"]
+];
+
+const pages = {
+  start: document.getElementById("startPage"),
+  game: document.getElementById("gamePage"),
+  final: document.getElementById("finalPage")
+};
+
+const overlay = document.getElementById("overlay");
+const overlayFront = document.getElementById("overlayFront");
+const overlayBack = document.getElementById("overlayBack");
+
+function showPage(name){
+  Object.values(pages).forEach(p=>p.classList.remove("active"));
+  pages[name].classList.add("active");
+  closeOverlay();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function openOverlay(index){
+  const [bg,fg] = palette[index % palette.length];
+  overlayFront.style.background = bg;
+  overlayFront.style.borderColor = "rgba(20,70,120,.12)";
+  overlayFront.innerHTML = `<div class="num" style="color:${fg}; text-shadow:0 2px 0 #fff;">${index+1}</div><div class="tiny">твоё число</div>`;
+  overlayBack.style.borderColor = fg;
+  overlayBack.innerHTML = `<div>${wishes[index]}</div><div class="stars" style="color:${fg};">★ ★ ★</div>`;
+  overlay.classList.add("active");
+}
+
+function closeOverlay(){
+  overlay.classList.remove("active");
+}
+
+function buildCards(){
+  const box = document.getElementById("cards");
+  box.innerHTML = "";
+  wishes.forEach((text,i)=>{
+    const [bg,fg] = palette[i % palette.length];
+    const card = document.createElement("div");
+    card.className = "card";
+    card.style.setProperty("--bg",bg);
+    card.style.setProperty("--fg",fg);
+    card.innerHTML = `
+      <div class="card-inner">
+        <div class="face front">
+          <div class="num">${i+1}</div>
+          <div class="tiny">нажми</div>
+        </div>
+        <div class="face back">
+          <div>${text}</div>
+          <div class="stars">★ ★ ★</div>
+        </div>
+      </div>`;
+    card.addEventListener("click",()=>openOverlay(i));
+    box.appendChild(card);
+  });
+}
+
+function makeConfetti(){
+  const c = document.getElementById("confetti");
+  c.innerHTML="";
+  const colors=["#1d70d6","#f28c00","#e53935","#43a047","#8e24aa","#00a59b"];
+  for(let i=0;i<45;i++){
+    const s=document.createElement("span");
+    s.style.left=Math.random()*100+"%";
+    s.style.background=colors[i%colors.length];
+    s.style.animationDuration=(4+Math.random()*5)+"s";
+    s.style.animationDelay=(-Math.random()*6)+"s";
+    s.style.transform=`rotate(${Math.random()*180}deg)`;
+    c.appendChild(s);
+  }
+}
+
+document.getElementById("startBtn").onclick=()=>showPage("game");
+document.getElementById("homeBtn").onclick=()=>showPage("start");
+document.getElementById("finishBtn").onclick=()=>{makeConfetti();showPage("final")};
+document.getElementById("againBtn").onclick=()=>{buildCards();showPage("start")};
+
+overlay.addEventListener("click",(e)=>{
+  if(e.target === overlay || e.target.closest("#overlayCard")){
+    closeOverlay();
+  }
+});
+
+buildCards();
+makeConfetti();
+</script>
+</body>
+</html>
